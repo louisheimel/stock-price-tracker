@@ -1,12 +1,20 @@
 /********* Fonts **********/
-div > form {
+div.container > form,
+div.container > div {
 	background-color: #c7c7c7;
 	width: 300px;
 	padding: 20px;
+	border: 2px solid black;
+	border-radius: 5px;
+	box-sizing: border-box;
+	font-weight: bold;
+	margin: 10px 0;
 }
 
 form input {
 	margin-bottom: 10px;
 }
+
+
 
 
