@@ -6,7 +6,41 @@ var something;
     google.charts.load('current', {packages: ['corechart', 'line']});
     google.charts.setOnLoadCallback(drawBasic);
     
-    renderAllStocks();
+    function drawBasic() {
+      var data = new google.visualization.DataTable();
+      data.addColumn('date', 'stock date');
+      ajaxFunctions.ajaxRequest('GET', '/get_all_stocks', function(stocks) {
+        
+        // console.log('stocks is an array? ' + (JSON.parse(stocks) instanceof Array));
+        JSON.parse(stocks).forEach((stock) => {
+          // render stock data to chart here
+          data.addColumn('number', stock.symbol);
+        });
+        
+        data.addRows([
+          // Add rows here
+        ]);
+        
+        var options = {
+          hAxis: {
+            title: 'stock date'
+          },
+          
+          vAxis: {
+            title: 'price'
+          }
+        }
+        
+        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+  
+        chart.draw(data, options);
+      })
+      
+      
+
+    }
+    
+    // renderAllStocks();
     
     form.addEventListener('submit', function(e) {
       e.preventDefault();
@@ -25,33 +59,12 @@ var something;
 
     function renderAllStocks() {
       ajaxFunctions.ajaxRequest('GET', '/get_all_stocks', function(stocks) {
-        console.log('hello, here are teh stocks ' + stocks);
-        
-        stocks.forEach((stock) => {
-          console.log(stock);
+
+        JSON.parse(stocks).forEach((stock) => {
+          // render stock data to chart here
         })
       })
     }
     
-    function drawBasic(stockData) {
-          console.log(stockData)
-          var data = new google.visualization.DataTable();
-          data.addColumn('date', 'Y');
-          data.addColumn('number', 'X');
-    
-          data.addRows(stockData.data);
-    
-          var options = {
-            hAxis: {
-              title: 'Time'
-            },
-            vAxis: {
-              title: 'Price'
-            }
-          };
-    
-          var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-    
-          chart.draw(data, options);
-        }
+ 
 })();
