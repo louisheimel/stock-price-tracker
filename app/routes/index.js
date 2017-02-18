@@ -19,31 +19,54 @@ module.exports = function (app, passport) {
 		
 	app.route('/get_stock')
 		.get(function(req, res, next) {
-			googleFinance.historical({
-			    symbol: 'NASDAQ:' + req.query.stock.toUpperCase(),
-			    from: '2014-01-01',
-			    to: '2014-12-31',
-			}, function(err, data) {
-			    if (err) throw err;
-			    Stock.findOne({symbol: req.query.stock.toUpperCase()}, function(err, stock) {
-			    	if (err) throw err;
-			    	if (!stock) {
-			    		var stock = new Stock({
-					    	symbol: req.query.stock.toUpperCase(),
-					    	data: data,
-					    });
-					    stock.save();
-			    	}
-			    })
-
-			    res.json(data);
+			Stock.findOne({symbol: req.query.stock.toUpperCase()}, function(err, stock) {
+				if (err) throw err;
+				if (!stock) {
+					var stock = new Stock({
+						symbol: req.query.stock.toUpperCase(),
+					});
+					stock.save();
+				}
 			});
 		});
 		
 	app.route('/get_all_stocks')
 		.get(function(req, res, next) {
+			var now = new Date();
+			var oneYearAgo = new Date();
+			var oneYearAgoMs = now.getTime() - 1000 * 60 * 60 * 24 * 365;
+			oneYearAgo.setTime(oneYearAgoMs);
 			Stock.find({}, function(err, stocks) {
-				res.json(stocks);
+				if (err) throw err;
+
+				var SYMBOLS = stocks.map((stock) => { return stock.symbol; });
+				
+				googleFinance.historical({
+					symbols: SYMBOLS,
+					from: oneYearAgo,
+					to: now,
+				})
+				.then((results) => {
+					var symbols = Object.keys(results);
+					var values = Object.keys(results).map((key) => { return results[key]; })
+					res.json(values.map((value, i) => { return {
+							symbol: symbols[i],
+							data: value
+									.map((datum) => {
+								return {
+									date: datum.date,
+									price: datum.high,
+								};
+							})
+									.filter((e, i) => {
+										return i % 10 === 0;
+									}),
+						}
+					
+					}));
+				});
+
+
 			})
 		})
 };
