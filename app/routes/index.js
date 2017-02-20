@@ -19,6 +19,7 @@ module.exports = function (app, passport) {
 		
 	app.route('/get_stock')
 		.get(function(req, res, next) {
+			// console.log('in route');
 			Stock.findOne({symbol: req.query.stock.toUpperCase()}, function(err, stock) {
 				if (err) throw err;
 				if (!stock) {
@@ -26,9 +27,17 @@ module.exports = function (app, passport) {
 						symbol: req.query.stock.toUpperCase(),
 					});
 					stock.save();
+					
 				}
 			});
+			res.redirect('/')
 		});
+		
+	app.route('/remove_stock')
+		.get(function(req, res, next) {
+			Stock.findOne({symbol: req.query.stock.toUpperCase()}).remove().exec();
+		})
+		
 		
 	app.route('/get_all_stocks')
 		.get(function(req, res, next) {
@@ -40,33 +49,35 @@ module.exports = function (app, passport) {
 				if (err) throw err;
 
 				var SYMBOLS = stocks.map((stock) => { return stock.symbol; });
-				
-				googleFinance.historical({
-					symbols: SYMBOLS,
-					from: oneYearAgo,
-					to: now,
-				})
-				.then((results) => {
-					var symbols = Object.keys(results);
-					var values = Object.keys(results).map((key) => { return results[key]; })
-					res.json(values.map((value, i) => { return {
-							symbol: symbols[i],
-							data: value
-									.map((datum) => {
-								return {
-									date: datum.date,
-									price: datum.high,
-								};
-							})
-									.filter((e, i) => {
-										return i % 10 === 0;
-									}),
-						}
-					
-					}));
-				});
-
-
+				if (SYMBOLS.length > 0) {
+						googleFinance.historical({
+							symbols: SYMBOLS,
+							from: oneYearAgo,
+							to: now,
+						})
+						.then((results) => {
+							var symbols = Object.keys(results);
+							var values = Object.keys(results).map((key) => { return results[key]; })
+							res.json(values.map((value, i) => { return {
+									symbol: symbols[i],
+									data: value
+											.map((datum) => {
+										return {
+											date: datum.date,
+											price: datum.high,
+										};
+									})
+											.filter((e, i) => {
+												return i % 10 === 0;
+											}),
+								}
+							
+							}));
+						});
+		
+					} else {
+						res.json([]);
+					}
 			})
 		})
 };

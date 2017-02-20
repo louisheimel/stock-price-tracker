@@ -2,24 +2,34 @@
 var something;
 (function() {
     var form = document.getElementsByTagName('form')[0];
-    
     google.charts.load('current', {packages: ['corechart', 'line']});
     google.charts.setOnLoadCallback(drawBasic);
+
     
     function drawBasic() {
       var data = new google.visualization.DataTable();
+      
       data.addColumn('date', 'stock date');
       ajaxFunctions.ajaxRequest('GET', '/get_all_stocks', function(stocks) {
-        
-        // console.log('stocks is an array? ' + (JSON.parse(stocks) instanceof Array));
+        JSON.parse(stocks).forEach((stock) => { appendStockDiv(stock.symbol)});
         JSON.parse(stocks).forEach((stock) => {
-          // render stock data to chart here
+          // add a column for each stock
           data.addColumn('number', stock.symbol);
         });
-        
-        data.addRows([
-          // Add rows here
-        ]);
+
+        data.addRows(
+          JSON.parse(stocks)
+          .map((e) => e.data
+                        .map((e) => { return [new Date(e.date), e.price]; })
+          )
+          .reduce((acc, col) => {
+            if (acc.length === 0) { 
+              return col;
+            } else {
+              return acc.map((e, i) => { return e.concat(col[i][1]); });
+            }
+          }, [])
+        );
         
         var options = {
           hAxis: {
@@ -32,39 +42,32 @@ var something;
         }
         
         var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-  
-        chart.draw(data, options);
-      })
-      
+        if (JSON.parse(stocks).length > 0) {
+          chart.draw(data, options);  
+        }
+      });
+
       
 
     }
     
-    // renderAllStocks();
-    
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      var value = e.target[0].value;
-      // get stock data here
-      ajaxFunctions.ajaxRequest('GET', '/get_stock?stock=' + value, function(data) {
-        var div = document.querySelector('div.container');
-        
-        var newDiv = document.createElement('div');
-        var para = document.createElement('p').appendChild(document.createTextNode(value.toUpperCase()));
-        newDiv.appendChild(para)
-        div.appendChild(newDiv);
-      })
-      
-    });
-
-    function renderAllStocks() {
-      ajaxFunctions.ajaxRequest('GET', '/get_all_stocks', function(stocks) {
-
-        JSON.parse(stocks).forEach((stock) => {
-          // render stock data to chart here
-        })
-      })
+    function appendStockDiv(val) {
+      var div = document.createElement('div');
+      var a = document.createElement('a');
+      a.appendChild(document.createTextNode('x'))
+      a.setAttribute('href', '/remove_stock?stock=' + val);
+      a.setAttribute('id', val);
+      div.appendChild(a);
+       var textNode = document.createTextNode(val);
+       div.appendChild(textNode);
+       document.getElementsByClassName('container')[0].appendChild(div);
     }
     
- 
+    document.addEventListener('click', function(e) {
+      if(e.target.tagName === 'A') {
+        e.preventDefault();
+        ajaxFunctions.ajaxRequest('GET', '/remove_stock?stock=' + e.target.id);
+
+      }
+    })
 })();
