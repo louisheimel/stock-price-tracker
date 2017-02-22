@@ -5,12 +5,11 @@ var something;
     google.charts.load('current', {packages: ['corechart', 'line']});
     google.charts.setOnLoadCallback(drawBasic);
 
-    
-    function drawBasic() {
+    function drawBasic(cb) {
       var data = new google.visualization.DataTable();
-      
       data.addColumn('date', 'stock date');
       ajaxFunctions.ajaxRequest('GET', '/get_all_stocks', function(stocks) {
+        
         JSON.parse(stocks).forEach((stock) => { appendStockDiv(stock.symbol)});
         JSON.parse(stocks).forEach((stock) => {
           // add a column for each stock
@@ -42,16 +41,23 @@ var something;
         }
         
         var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        if (JSON.parse(stocks).length > 0) {
-          chart.draw(data, options);  
-        }
+        
+        chart.draw(data, options);  
+        cb();
       });
 
       
 
     }
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      ajaxFunctions.ajaxRequest('GET', '/get_stock?stock=' + e.target.childNodes[3].value, function(data) {
+        drawBasic();
+      });
+    })
     
     function appendStockDiv(val) {
+      if(document.querySelectorAll('#' + val.toUpperCase()).length > 0) { return; }
       var div = document.createElement('div');
       var a = document.createElement('a');
       a.appendChild(document.createTextNode('x'))
@@ -66,8 +72,11 @@ var something;
     document.addEventListener('click', function(e) {
       if(e.target.tagName === 'A') {
         e.preventDefault();
-        ajaxFunctions.ajaxRequest('GET', '/remove_stock?stock=' + e.target.id);
-
+        ajaxFunctions.ajaxRequest('GET', '/remove_stock?stock=' + e.target.id, function(data) {
+          drawBasic(function() {
+            e.target.parentElement.parentElement.removeChild(e.target.parentElement);
+          });
+        });
       }
     })
 })();

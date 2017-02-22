@@ -36,6 +36,7 @@ module.exports = function (app, passport) {
 	app.route('/remove_stock')
 		.get(function(req, res, next) {
 			Stock.findOne({symbol: req.query.stock.toUpperCase()}).remove().exec();
+			res.json('removed');
 		})
 		
 		
