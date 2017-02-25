@@ -1,5 +1,5 @@
 'use strict';
-var something;
+
 (function() {
     var form = document.getElementsByTagName('form')[0];
     google.charts.load('current', {packages: ['corechart', 'line']});
@@ -78,5 +78,12 @@ var something;
           });
         });
       }
-    })
+    });
+    
+    const WebSocket = require('ws');
+
+    const ws = new WebSocket('ws://www.host.com/path', {
+      perMessageDeflate: false
+    });
+
 })();
