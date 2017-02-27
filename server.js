@@ -32,8 +32,10 @@ io.on('connection', function(socket) {
 			}
 		});
 		io.emit('updateui');
-		// clients.forEach((client) => { client.emit('updateui'); })
-		// socket.broadcast.emit('updateui');
+    });
+    
+    socket.on('updateuionallsockets', function(e) {
+    	io.emit('updateui');
     })
 })
 

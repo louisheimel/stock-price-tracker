@@ -2,16 +2,12 @@
 
 (function() {
     	var form = document.getElementsByTagName('form')[0];
-		// 	var Stock = require( '../models/stocks.js');
-			
+    	
 		    google.charts.load('current', {packages: ['corechart', 'line']});
 		    google.charts.setOnLoadCallback(drawBasic);
 		    form.addEventListener('submit', function(e) {
 		      e.preventDefault();
 		      socket.emit('new_ticker', e.target.childNodes[3].value);
-		      // ajaxFunctions.ajaxRequest('GET', '/get_stock?stock=' + e.target.childNodes[3].value, function(data) {
-		      //   drawBasic();
-		      // });
 		    })
 		    function appendStockDiv(val) {
       if(document.querySelectorAll('#' + val.toUpperCase()).length > 0) { return; }
@@ -67,26 +63,22 @@
 		      });
 			}
 		    var socket = io();
+		    
 		    socket.on('connect', function(data) {
 		        socket.emit('join', 'Hello World from client');
 		    });
+		    
 		    socket.on('updateui', function() {
 		      console.log('ui updating!');
-		    // 	drawBasic(() => { return 'ui updating!'});
 		      drawBasic();
 		    })
-	        document.addEventListener('click', function(e) {
-		      if(e.target.tagName === 'A') {
-		        e.preventDefault();
-		        console.log(e.target.id);
-		        ajaxFunctions.ajaxRequest('GET', '/remove_stock?stock=' + e.target.id, function(data) {
-		          console.log(data);
-		        })
-		        // Stock.findOne({symbol: req.query.stock.toUpperCase()}).remove().exec();
-		        //   drawBasic(function() {
-		        //     e.target.parentElement.parentElement.removeChild(e.target.parentElement);
-		        //   });
-		      }
+		    
+          document.addEventListener('click', function(e) {
+          if(e.target.tagName === 'A') {
+            e.preventDefault();
+            ajaxFunctions.ajaxRequest('GET', '/remove_stock?stock=' + e.target.id);
+            socket.emit('updateuionallsockets');
+          }
 		    });
 
 })();
