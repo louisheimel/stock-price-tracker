@@ -5,15 +5,37 @@ var routes = require('./app/routes/index.js');
 var mongoose = require('mongoose');
 var passport = require('passport');
 var session = require('express-session');
+var Stock = require('./app/models/stocks.js');
+
 
 var app = express();
 
 var server = require('http').Server(app);
 var io = require("socket.io")(server);
 
-io.on("connection", function(socket) {
-	socket.emit("something", { str: 'something' });
-});
+io.on('connection', function(socket) {
+	console.log('client connected');
+	socket.on('join', function(data) {
+        console.log(data);
+        socket.emit('messages', 'Hello from server');
+    });
+    
+    socket.on('new_ticker', function(e) {
+    	console.log('symbol added: ' + e.toUpperCase());
+    	Stock.findOne({symbol: e.toUpperCase()}, function(err, stock) {
+			if (err) throw err;
+			if (!stock) {
+				var stock = new Stock({
+					symbol: e.toUpperCase(),
+				});
+				stock.save();
+			}
+		});
+		io.emit('updateui');
+		// clients.forEach((client) => { client.emit('updateui'); })
+		// socket.broadcast.emit('updateui');
+    })
+})
 
 require('dotenv').load();
 
